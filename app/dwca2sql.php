@@ -32,9 +32,15 @@ $strings = array(
     'É sinônimo HETEROTIPICO'=>'synonym_of',
     'É sinônimo HOMOTIPICO'=>'synonym_of',
     'É sinônimo BASIONIMO'=>'synonym_of',
+    'sinônimo HETEROTIPICO'=>'synonym_of',
+    'sinônimo HOMOTIPICO'=>'synonym_of',
+    'sinônimo BASIONIMO'=>'synonym_of',
     'Tem como sinônimo HETEROTIPICO'=>'has_synonym',
     'Tem como sinônimo HOMOTIPICO'=>'has_synonym',
-    'Tem como sinônimo BASIONIMO'=>'has_synonym'
+    'Tem como sinônimo BASIONIMO'=>'has_synonym',
+    'como sinônimo HETEROTIPICO'=>'has_synonym',
+    'como sinônimo HOMOTIPICO'=>'has_synonym',
+    'como sinônimo BASIONIMO'=>'has_synonym'
 );
 
 // create table if not exists
@@ -43,15 +49,15 @@ $err = $db->errorInfo();
 if($err[0] != "00000") var_dump($db->errorInfo());
 
 // clean table
-$db->exec("DELETE FROM taxa ;");
+//$db->exec("DELETE FROM taxa ;");
 $err = $db->errorInfo();
 if($err[0] != "00000") var_dump($db->errorInfo());
 
 // download
 echo "Downloading...\n";
 if(file_Exists($data.'/dwca.zip')) unlink($data.'/dwca.zip');
-$command = 'wget '.$DWCA.' -O '.$data.'/dwca.zip';
-system($command);
+$command = 'curl '.$DWCA.' -o '.$data.'/dwca.zip';
+#system($command);
 echo "Downloaded.\n";
 
 // Unzing
@@ -95,7 +101,7 @@ if($err[0] != "00000") var_dump($db->errorInfo());
 
 $i=0;
 echo "Inserting...\n";
-while($row = fgetcsv($f,0,"\t")) {
+while($row = fgetcsv($f,0,"\t") && false) {
     # translate taxonomicStatus
     $row[$headers['taxonomicStatus']] = $strings[$row[$headers['taxonomicStatus']]] ;
 
@@ -162,7 +168,9 @@ if($err[0] != "00000") var_dump($db->errorInfo());
 $i=0;
 echo "Updating...\n";
 while($row = fgetcsv($f,0,"\t")) {
-    $relation = ( $strings[$row[$headers['relationshipOfResource']]]);
+  $rel = $row[$headers['relationshipOfResource']];
+  $rel=substr($rel,strpos($rel," ") + 1);
+  $relation = $strings[utf8_decode($rel)];
 
     $data=false;
     if($relation == 'synonym_of') {
@@ -180,29 +188,6 @@ while($row = fgetcsv($f,0,"\t")) {
 }
 
 fclose($f);
-
-# experimental output to couchdb
-if(isset($COUCHDB)) {
-    $q = $pdo->select("select * from taxa;");
-    $docs = array("docs"=>array());
-    while($doc = $q->fetchObject()) {
-        $doc->metadata = array("type"=>"taxon","created"=>time(),"source"=>$DWCA);
-        $docs["docs"][] = $doc;
-    }
-    $opts = ['http'=>['method'=>'POST','content'=>json_encode($docs),'header'=>'Content-type: application/json']];
-    file_get_contents($COUCHDB."/_bulk_docs", NULL, stream_context_create($opts));
-}
-
-# experimental output to elasticsearch
-if(isset($ELASTICSEARCH)) {
-    $q = $pdo->select("select * from taxa;");
-    while($doc = $q->fetchObject()) {
-        $doc->metadata = array("type"=>"taxon","created"=>time(),"source"=>$DWCA);
-        $opts = ['http'=>['method'=>'POST','content'=>json_encode($doc),'header'=>'Content-type: application/json']];
-        file_get_contents($ELASTICSEARCH."/taxon", NULL, stream_context_create($opts));
-    }
-}
-
 
 echo "Done.\n";
 

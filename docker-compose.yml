@@ -1,7 +1,8 @@
 floradata:
-  build: .
+  image: cncflora/apache
   ports:
     - 8081:80
-    - 9005:9001
   volumes:
     - .:/var/www
+  command:
+    - /var/www/start.sh
