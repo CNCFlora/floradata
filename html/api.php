@@ -110,15 +110,9 @@ if($q=='/search/species') { // specie search
     }
 
     if($r->result != null) {
-        foreach($miss as $syn) {
-            // get the saved synonyms
-            if($syn->acceptedNameUsage == $r->result->scientificName) {
-                $r->result->synonyms[] = $syn;
-            }
-        }
-    } else if(count($miss) >= 1) {
-        $r->result = $miss[0];
-    } 
+        $r->result->synonyms = $db->query("select * from taxa where acceptednameUsage like '%".$r->result->scientificNameWithoutAuthorship."%' and taxonID != '".$r->result->taxonID."'")->fetchAll(PDO::FETCH_CLASS,"StdClass");
+    }
+
 
 }
 

@@ -49,7 +49,7 @@ $err = $db->errorInfo();
 if($err[0] != "00000") var_dump($db->errorInfo());
 
 // clean table
-//$db->exec("DELETE FROM taxa ;");
+$db->exec("DELETE FROM taxa ;");
 $err = $db->errorInfo();
 if($err[0] != "00000") var_dump($db->errorInfo());
 
@@ -57,7 +57,7 @@ if($err[0] != "00000") var_dump($db->errorInfo());
 echo "Downloading...\n";
 if(file_Exists($data.'/dwca.zip')) unlink($data.'/dwca.zip');
 $command = 'curl '.$DWCA.' -o '.$data.'/dwca.zip';
-#system($command);
+system($command);
 echo "Downloaded.\n";
 
 // Unzing
@@ -101,7 +101,7 @@ if($err[0] != "00000") var_dump($db->errorInfo());
 
 $i=0;
 echo "Inserting...\n";
-while($row = fgetcsv($f,0,"\t") && false) {
+while($row = fgetcsv($f,0,"\t")) {
     # translate taxonomicStatus
     $row[$headers['taxonomicStatus']] = $strings[$row[$headers['taxonomicStatus']]] ;
 
