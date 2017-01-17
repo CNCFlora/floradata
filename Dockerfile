@@ -4,3 +4,4 @@ WORKDIR /var/www
 ADD . /var/www
 RUN chown www-data.www-data /var/www -Rf
 
+CMD ["/var/www/start.sh"]
